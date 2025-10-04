@@ -22,6 +22,8 @@ export default function App() {
   const [activeView, setActiveView] = useState('standard')
   const [showMap, setShowMap] = useState(false)
   const [predictionDate, setPredictionDate] = useState('')
+  const [locationName, setLocationName] = useState('')
+  const [isFirstView, setIsFirstView] = useState(true)
 
   // Refs
   const globeContainer = useRef(null)
@@ -38,7 +40,6 @@ export default function App() {
 
   const handleSearch = async (e) => {
     e.preventDefault()
-    setIsLoading(true)
     
     try {
       // Geocode the location using OpenStreetMap's Nominatim service
@@ -57,42 +58,20 @@ export default function App() {
       )
 
       if (response.data.length > 0) {
-        const { lat, lon } = response.data[0]
-        const newCoords = { lat: parseFloat(lat), lng: parseFloat(lon) }
-        setCoordinates(newCoords)
-        setShowMap(true)
-
-        // Get weather data from API
-        const weatherResponse = await axios.get(
-          `https://nasa-space-apps-1.onrender.com/climate?date=${predictionDate}&lat=${newCoords.lat}&lon=${newCoords.lng}`
-        )
-        const data = weatherResponse.data
-
-        setWeatherData({
-          temperature: `${data.values.temperature}°C`,
-          precipitation: `${data.values.total_precipitation}mm/month`,
-          snowfall: data.values.snowfall ? `${data.values.snowfall}mm/month` : 'No snowfall',
-          windSpeed: `${data.values.wind_speed}km/h`,
-          airQuality: {
-            index: Math.min(100, data.values.aqi * 100),
-            quality: (data.ai_classification.classification || []).find(c => c.includes('Air Quality')) || 'Good'
-          },
-          classification: data.ai_classification.classification || [],
-          graphs: data.graphs || {},
-          explanation: data.ai_classification.explanation || ''
-        })
+        const location = response.data[0];
+        const newCoords = { lat: parseFloat(location.lat), lng: parseFloat(location.lon) };
+        const formattedName = location.display_name;
+        setLocationName(formattedName);
+        setCoordinates(newCoords);
+        setShowMap(true);
         
         // Show prediction controls after successful search
-        setShowPredictionControls(true)
+        setShowPredictionControls(true);
       }
     } catch (error) {
       console.error('Error:', error)
     }
-    
-    setIsLoading(false)
   }
-
-
 
   return (
     <div className="app-container">
@@ -107,7 +86,6 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
-          isLoading={isLoading}
         />
 
         <AnimatePresence>
@@ -130,6 +108,42 @@ export default function App() {
                 
                 setIsLoading(true);
                 try {
+                  // Get location name from coordinates
+                  const locationResponse = await axios.get(
+                    'https://nominatim.openstreetmap.org/reverse',
+                    {
+                      params: {
+                        lat: coordinates.lat,
+                        lon: coordinates.lng,
+                        format: 'json'
+                      },
+                      headers: {
+                        'User-Agent': 'WeatherApp/1.0'
+                      }
+                    }
+                  );
+
+                  const locationData = locationResponse.data;
+                  let locationName = '';
+                  if (locationData) {
+                    // Extract the most relevant name (usually city/town/village)
+                    const addressParts = [];
+                    if (locationData.address) {
+                      const address = locationData.address;
+                      // Try to get the most specific location name
+                      const specificLocation = 
+                        address.city || 
+                        address.town || 
+                        address.village || 
+                        address.suburb ||
+                        address.municipality;
+                      if (specificLocation) addressParts.push(specificLocation);
+                      if (address.state) addressParts.push(address.state);
+                      if (address.country) addressParts.push(address.country);
+                    }
+                    locationName = addressParts.length > 0 ? addressParts.join(', ') : locationData.display_name;
+                  }
+                  
                   // Format date from YYYY-MM-DD to DD-MM-YYYY
                   const formattedDate = predictionDate.split('-').reverse().join('-');
                   const weatherUrl = `https://nasa-space-apps-1.onrender.com/climate?date=${formattedDate}&lat=${coordinates.lat}&lon=${coordinates.lng}`;
@@ -143,7 +157,8 @@ export default function App() {
                   const data = weatherResponse.data;
                   console.log('Weather API response:', data);
                   
-                  setWeatherData({
+                  console.log('Raw graphs data:', data.graphs);
+                  const processedData = {
                     temperature: `${data.values.temperature}°C`,
                     precipitation: `${data.values.total_precipitation}mm/month`,
                     snowfall: data.values.snowfall ? `${data.values.snowfall}mm/month` : 'No snowfall',
@@ -153,10 +168,26 @@ export default function App() {
                       quality: (data.ai_classification.classification || []).find(c => c.includes('Air Quality')) || 'Good'
                     },
                     classification: data.ai_classification.classification || [],
-                    graphs: data.graphs || {},
                     explanation: data.ai_classification.explanation || '',
-                    coordinates: coordinates
-                  });
+                    coordinates: coordinates,
+                    locationName: locationName || 'Unknown Location',
+                    locationName: locationName,
+                    graphs: []
+                  };
+
+                  // Process graphs if they exist
+                  if (data.graphs && typeof data.graphs === 'object') {
+                    processedData.graphs = Object.entries(data.graphs).map(([key, url]) => ({
+                      id: key,
+                      url: url.startsWith('http') ? url : `https://nasa-space-apps-1.onrender.com${url}`,
+                      title: key.replace(/_/g, ' ').split(' ').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                      ).join(' ')
+                    }));
+                  }
+                  
+                  console.log('Processed weather data:', processedData);
+                  setWeatherData(processedData);
                 } catch (error) {
                   console.error('Error fetching weather data:', error);
                   alert('Failed to fetch weather data. Please try again later.');
@@ -171,30 +202,119 @@ export default function App() {
       </motion.div>
 
       <div className="view-toggle">
-        <button 
-          className={`toggle-btn ${activeView === 'standard' ? 'active' : ''}`}
-          onClick={() => setActiveView('standard')}
-        >
-          Standard View
-        </button>
-        <button 
-          className={`toggle-btn ${activeView === 'satellite' ? 'active' : ''}`}
-          onClick={() => setActiveView('satellite')}
-        >
-          Satellite View
-        </button>
-        <button 
-          className={`toggle-btn ${activeView === 'night' ? 'active' : ''}`}
-          onClick={() => setActiveView('night')}
-        >
-          Night View
-        </button>
-        <button 
-          className={`toggle-btn ${activeView === 'topology' ? 'active' : ''}`}
-          onClick={() => setActiveView('topology')}
-        >
-          Topology View
-        </button>
+        <div>
+          <button 
+            className={`toggle-btn ${activeView === 'standard' ? 'active' : ''}`}
+            onClick={() => setActiveView('standard')}
+          >
+            Standard View
+          </button>
+          <button 
+            className={`toggle-btn ${activeView === 'satellite' ? 'active' : ''}`}
+            onClick={() => setActiveView('satellite')}
+          >
+            Satellite View
+          </button>
+          <button 
+            className={`toggle-btn ${activeView === 'night' ? 'active' : ''}`}
+            onClick={() => setActiveView('night')}
+          >
+            Night View
+          </button>
+          <button 
+            className={`toggle-btn ${activeView === 'topology' ? 'active' : ''}`}
+            onClick={() => setActiveView('topology')}
+          >
+            Topology View
+          </button>
+        </div>
+        <div className="dimension-toggle">
+          <button 
+            className={`toggle-btn ${showMap ? 'active' : ''}`}
+            disabled={isLoading}
+            onClick={async () => {
+              if (isLoading) {
+                return;
+              }
+
+              // If showing weather results and switching to 3D
+              if (showMap && weatherData) {
+                setWeatherData(null); // Close the prediction results
+                setTimeout(() => {
+                  setShowMap(false);
+                  if (map.current) {
+                    map.current.setTarget(undefined);
+                  }
+                }, 300); // Wait for results to fade out
+                return;
+              }
+
+              // Normal toggle behavior
+              if (showMap) {
+                setShowMap(false);
+                if (map.current) {
+                  map.current.setTarget(undefined);
+                }
+              } else {
+                if (isFirstView) {
+                  try {
+                    const response = await axios.get(
+                      `https://nominatim.openstreetmap.org/search`,
+                      {
+                        params: {
+                          q: 'Kottayam, Kerala, India',
+                          format: 'json',
+                          limit: 1
+                        },
+                        headers: {
+                          'User-Agent': 'WeatherApp/1.0'
+                        }
+                      }
+                    );
+                    if (response.data.length > 0) {
+                      const location = response.data[0];
+                      setCoordinates({ 
+                        lat: parseFloat(location.lat), 
+                        lng: parseFloat(location.lon) 
+                      });
+                      setLocationName(location.display_name);
+                      setShowPredictionControls(true);
+                    }
+                    setIsFirstView(false);
+                  } catch (error) {
+                    console.error('Error setting default location:', error);
+                  }
+                }
+                setShowMap(true);
+              }
+            }}
+          >
+            {showMap ? '3D' : '2D'}
+          </button>
+          {/* Show tooltip when loading */}
+          {isLoading && (
+            <div 
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                background: 'var(--background-dark)',
+                color: 'var(--text-primary)',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                fontSize: '14px',
+                whiteSpace: 'nowrap',
+                marginTop: '8px',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                zIndex: 1000
+              }}
+            >
+              Close prediction window to enable 3D view
+            </div>
+          )}
+        </div>
       </div>
 
       <div className={`visualization-container ${isLoading || weatherData ? 'split' : ''}`}>
@@ -214,6 +334,10 @@ export default function App() {
             activeView={activeView}
             onGlobeReady={() => console.log('Globe ready')}
             globeRef={globeContainer}
+            onZoomThreshold={() => {
+              // Wait for rotation animation to complete before showing map
+              setTimeout(() => setShowMap(true), 1000);
+            }}
           />
         </motion.div>
         <motion.div 
@@ -237,32 +361,19 @@ export default function App() {
               map={map}
               setShowPredictionControls={setShowPredictionControls}
               setIsFullScreen={setIsFullScreen}
+              setLocationName={setLocationName}
             />
           )}
         </motion.div>
-        {showMap && (
-          <motion.button
-            className="back-to-globe"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={() => {
-              setShowMap(false)
-              if (map.current) {
-                map.current.setTarget(undefined)
-              }
-            }}
-          >
-            Return to Globe
-          </motion.button>
-        )}
       </div>
 
       <AnimatePresence>
         {isLoading ? (
-          <LoadingScreen />
+          <LoadingScreen onClose={() => setIsLoading(false)} />
         ) : weatherData ? (
           <WeatherResults
             weatherData={weatherData}
+            locationName={locationName}
             onClose={() => setWeatherData(null)}
           />
         ) : null}

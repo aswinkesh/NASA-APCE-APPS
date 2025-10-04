@@ -13,10 +13,21 @@
   z-index: 1000;
 }
 
-.closeButton {
+.headerButtons {
   position: fixed;
   top: 1.5rem;
   right: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  z-index: 10;
+}
+
+.downloadContainer {
+  position: relative;
+}
+
+.downloadButton,
+.closeButton {
   background: rgba(255, 255, 255, 0.1);
   border: none;
   width: 48px;
@@ -28,9 +39,50 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  z-index: 10;
   backdrop-filter: blur(8px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.downloadButton:hover,
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.closeButton:hover {
+  transform: scale(1.1) rotate(90deg);
+}
+
+.downloadOptions {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  min-width: 150px;
+}
+
+.downloadOptions button {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.downloadOptions button:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .closeButton:hover {
@@ -57,11 +109,19 @@
 
 .section h2 {
   font-size: 1.8rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.locationName {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+  font-weight: normal;
+  opacity: 0.9;
 }
 
 .section h3 {
@@ -149,19 +209,65 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.graphHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+}
+
+.graphDownloadButton {
+  background: rgba(76, 201, 240, 0.2);
+  border: 1px solid rgba(76, 201, 240, 0.3);
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.graphDownloadButton:hover {
+  background: rgba(76, 201, 240, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 201, 240, 0.3);
+}
+
+.graphDownloadButton:active {
+  transform: translateY(0);
+  background: rgba(76, 201, 240, 0.5);
 }
 
 .graphCard:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .graph {
   width: 100%;
   height: 200px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
   margin-bottom: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .graphLabel {
@@ -171,5 +277,28 @@
   padding: 0.5rem 0;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 6px;
-  margin-top: 0.5rem;
+  margin-top: auto;
+}
+
+.noGraphs {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.errorGraph {
+  background: rgba(255, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  filter: grayscale(0.5);
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.errorGraph:hover {
+  opacity: 1;
+  filter: grayscale(0);
 }

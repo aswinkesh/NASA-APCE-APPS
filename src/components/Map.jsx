@@ -12,6 +12,8 @@ import Feature from 'ol/Feature'
 import { defaults as defaultControls, FullScreen, ZoomSlider, Control } from 'ol/control'
 import Modify from 'ol/interaction/Modify'
 
+import axios from 'axios';
+
 export default function Map({
   mapRef,
   coordinates,
@@ -21,7 +23,8 @@ export default function Map({
   vectorLayer,
   map,
   setShowPredictionControls,
-  setIsFullScreen
+  setIsFullScreen,
+  setLocationName
 }) {
   // Configure tile layers for different views
   const getTileLayer = () => {
@@ -150,17 +153,16 @@ export default function Map({
     customControls.appendChild(gpsButton)
 
     // Add click handler to map
-    map.current?.on('click', (event) => {
+    map.current?.on('click', async (event) => {
       const coords = map.current.getCoordinates(event.pixel)
       const lonLat = toLonLat(coords)
-      setCoordinates({
+      const newCoords = {
         lat: lonLat[1],
         lng: lonLat[0]
-      })
-      updateMarker({
-        lat: lonLat[1],
-        lng: lonLat[0]
-      })
+      }
+      setCoordinates(newCoords)
+      updateMarker(newCoords)
+      await getLocationName(newCoords)
       setShowPredictionControls(true)
     })
 
@@ -201,14 +203,16 @@ export default function Map({
     map.current.addInteraction(modify)
 
     // Handle marker drag events
-    modify.on('modifyend', (event) => {
+    modify.on('modifyend', async (event) => {
       const feature = event.features.getArray()[0]
       const coords = feature.getGeometry().getCoordinates()
       const lonLat = toLonLat(coords)
-      setCoordinates({
+      const newCoords = {
         lat: lonLat[1],
         lng: lonLat[0]
-      })
+      }
+      setCoordinates(newCoords)
+      await getLocationName(newCoords)
       setShowPredictionControls(true)
     })
 
@@ -222,6 +226,30 @@ export default function Map({
       }
     }
   }, [coordinates, activeView])
+
+  const getLocationName = async (coords) => {
+    try {
+      const response = await axios.get(
+        'https://nominatim.openstreetmap.org/reverse',
+        {
+          params: {
+            lat: coords.lat,
+            lon: coords.lng,
+            format: 'json',
+          },
+          headers: {
+            'User-Agent': 'WeatherApp/1.0'
+          }
+        }
+      );
+      
+      if (response.data && response.data.display_name) {
+        setLocationName(response.data.display_name);
+      }
+    } catch (error) {
+      console.error('Error getting location name:', error);
+    }
+  };
 
   const updateMarker = (coords) => {
     if (!vectorSource.current) return

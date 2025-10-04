@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import styles from './SearchBar.module.css'
 
-export default function SearchBar({ searchQuery, setSearchQuery, handleSearch, isLoading }) {
+export default function SearchBar({ searchQuery, setSearchQuery, handleSearch }) {
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -93,9 +93,8 @@ export default function SearchBar({ searchQuery, setSearchQuery, handleSearch, i
             className={styles['search-button']}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            disabled={isLoading}
           >
-            {isLoading ? 'Searching...' : 'Search'}
+            Search
           </motion.button>
         </div>
       </form>

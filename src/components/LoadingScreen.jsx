@@ -1,9 +1,16 @@
 import { motion } from 'framer-motion';
 import styles from './LoadingScreen.module.css';
 
-export default function LoadingScreen() {
+export default function LoadingScreen({ onClose }) {
   return (
     <div className={styles.loadingContainer}>
+      <button 
+        onClick={onClose}
+        className={styles.closeButton}
+        aria-label="Close loading screen"
+      >
+        ×
+      </button>
       <div className={styles.content}>
         <motion.div
           className={styles.weatherIcon}

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
-export default function Globe({ coordinates, activeView, onGlobeReady, globeRef }) {
+export default function Globe({ coordinates, activeView, onGlobeReady, globeRef, onZoomThreshold }) {
   const scene = useRef(null)
   const camera = useRef(null)
   const renderer = useRef(null)
@@ -164,7 +164,66 @@ export default function Globe({ coordinates, activeView, onGlobeReady, globeRef 
     }
   }, [])
 
-  // Update marker position when coordinates change
+  // Smooth rotation function
+  const rotateToLocation = (coords) => {
+    if (!controls.current || !earth.current || !camera.current) return;
+
+    const phi = (90 - coords.lat) * (Math.PI / 180);
+    const theta = (coords.lng + 180) * (Math.PI / 180);
+    const radius = 15; // Camera distance
+
+    // Calculate target camera position
+    const targetX = -radius * Math.sin(phi) * Math.cos(theta);
+    const targetY = radius * Math.cos(phi);
+    const targetZ = radius * Math.sin(phi) * Math.sin(theta);
+
+    // Store initial camera position
+    const startPos = {
+      x: camera.current.position.x,
+      y: camera.current.position.y,
+      z: camera.current.position.z
+    };
+
+    // Animation duration in milliseconds
+    const duration = 1000;
+    const startTime = Date.now();
+
+    // Disable controls during animation
+    if (controls.current) {
+      controls.current.enabled = false;
+    }
+
+    function animate() {
+      const now = Date.now();
+      const progress = Math.min((now - startTime) / duration, 1);
+      
+      // Smooth easing
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+      // Update camera position
+      camera.current.position.x = startPos.x + (targetX - startPos.x) * easeProgress;
+      camera.current.position.y = startPos.y + (targetY - startPos.y) * easeProgress;
+      camera.current.position.z = startPos.z + (targetZ - startPos.z) * easeProgress;
+
+      // Look at center
+      camera.current.lookAt(new THREE.Vector3(0, 0, 0));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Re-enable controls
+        if (controls.current) {
+          controls.current.enabled = true;
+        }
+        // Trigger transition to 2D view
+        onZoomThreshold(coords);
+      }
+    }
+
+    animate();
+  };
+
+  // Update marker position and rotate globe when coordinates change
   useEffect(() => {
     if (!earth.current || !marker.current || !coordinates) return
 
@@ -180,6 +239,9 @@ export default function Globe({ coordinates, activeView, onGlobeReady, globeRef 
 
     marker.current.position.copy(position)
     marker.current.visible = true
+
+    // Start rotation animation when coordinates change
+    rotateToLocation(coordinates);
   }, [coordinates])
 
   // Update texture when view changes
