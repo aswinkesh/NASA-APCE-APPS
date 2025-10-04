@@ -1,10 +1,151 @@
-import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import styles from './WeatherResults.module.css';
+
+const ANIMATION_DURATION = 15000; // 5 seconds
 
 export default function WeatherResults({ weatherData, onClose }) {
   const locationName = weatherData.locationName;
   const [showDownloadOptions, setShowDownloadOptions] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(true);
+  
+  useEffect(() => {
+    // Hide animation after ANIMATION_DURATION
+    const timer = setTimeout(() => {
+      setShowAnimation(false);
+    }, ANIMATION_DURATION);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const getWeatherAnimation = () => {
+    const classifications = weatherData.classification || [];
+    
+    if (classifications.includes('Very Hot')) {
+      return (
+        <div className={`${styles.weatherAnimation} ${styles.sunAnimation}`}>
+          {/* Add extra sun rays */}
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                top: '20%',
+                left: '50%',
+                width: '4px',
+                height: '50px',
+                background: 'rgba(255, 165, 0, 0.4)',
+                transformOrigin: 'bottom',
+                transform: `translate(-50%, -100%) rotate(${i * 45}deg)`
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (classifications.includes('Very Wet')) {
+      return (
+        <div className={`${styles.weatherAnimation} ${styles.rainAnimation}`}>
+          {[...Array(100)].map((_, i) => (
+            <div
+              key={i}
+              className={styles.rainDrop}
+              style={{
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 1.5}s`,
+                top: `${Math.random() * 100}%`,
+                opacity: Math.random() * 0.4 + 0.6
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (classifications.includes('Very Snowy')) {
+      return (
+        <div className={`${styles.weatherAnimation} ${styles.snowAnimation}`}>
+          {[...Array(30)].map((_, i) => (
+            <div
+              key={i}
+              className={styles.snowflake}
+              style={{
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                fontSize: `${Math.random() * 10 + 10}px`
+              }}
+            >
+              ❄
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (classifications.includes('Very Windy')) {
+      return (
+        <div className={`${styles.weatherAnimation} ${styles.windAnimation}`}>
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className={styles.windLine}
+              style={{
+                top: `${Math.random() * 100}%`,
+                width: `${Math.random() * 100 + 50}px`,
+                opacity: Math.random() * 0.5 + 0.2,
+                animationDelay: `${Math.random() * 2}s`
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (classifications.includes('Very Cold')) {
+      return (
+        <div className={`${styles.weatherAnimation} ${styles.frostAnimation}`}>
+          {[...Array(15)].map((_, i) => (
+            <div
+              key={i}
+              className={styles.frostCrystal}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (classifications.includes('Very Uncomfortable')) {
+      return (
+        <div className={`${styles.weatherAnimation} ${styles.uncomfortableAnimation}`}>
+          <div className={styles.uncomfortableSun} />
+          <div className={styles.uncomfortableRing} />
+          <div className={styles.uncomfortableWind}>
+            {[...Array(20)].map((_, i) => (
+              <div
+                key={i}
+                className={styles.windStreak}
+                style={{
+                  top: `${Math.random() * 100}%`,
+                  width: `${Math.random() * 200 + 100}px`,
+                  opacity: Math.random() * 0.5 + 0.3,
+                  animationDelay: `${Math.random() * 2}s`,
+                  transform: `rotate(${Math.random() * 20 - 10}deg) translateX(-100%)`
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   const downloadData = (format) => {
     // Helper function to extract numeric values from strings with units
@@ -23,7 +164,18 @@ export default function WeatherResults({ weatherData, onClose }) {
         latitude: weatherData.coordinates?.lat || 0,
         longitude: weatherData.coordinates?.lng || 0
       },
-      source: 'NASA Space Apps Climate API',
+      source: {
+        name: 'NASA Space Apps Climate API',
+        details: 'Data derived from NASA satellite observations and climate models',
+        apiEndpoint: 'https://nasa-space-apps-1.onrender.com/climate',
+        dataDate: weatherData.date || currentDate,
+        attribution: 'Powered by NASA Earth Science Data',
+        datasets: [
+          'NASA POWER (Prediction of Worldwide Energy Resources)',
+          'NASA NEO (NASA Earth Observations)',
+          'GEOS-5 Atmospheric Data'
+        ]
+      },
       values: {
         temperature: {
           value: extractNumericValue(weatherData.temperature),
@@ -73,7 +225,13 @@ export default function WeatherResults({ weatherData, onClose }) {
         'Air Quality Index',
         'Air Quality Status',
         'Classifications',
-        'Explanation'
+        'Explanation',
+        'Data Source',
+        'Source Details',
+        'API Endpoint',
+        'Data Collection Date',
+        'Attribution',
+        'Source Datasets'
       ];
 
       const values = [
@@ -88,7 +246,13 @@ export default function WeatherResults({ weatherData, onClose }) {
         metadata.values.airQuality.index,
         metadata.values.airQuality.quality,
         metadata.classification.join('; '),
-        metadata.explanation
+        metadata.explanation,
+        metadata.source.name,
+        metadata.source.details,
+        metadata.source.apiEndpoint,
+        metadata.source.dataDate,
+        metadata.source.attribution,
+        metadata.source.datasets.join('; ')
       ];
 
       // Function to escape and format CSV cell
@@ -124,6 +288,18 @@ export default function WeatherResults({ weatherData, onClose }) {
       exit={{ x: '100%' }}
       transition={{ duration: 0.3 }}
     >
+      <AnimatePresence>
+        {showAnimation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {getWeatherAnimation()}
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className={styles.headerButtons}>
         <div className={styles.downloadContainer}>
           <button 

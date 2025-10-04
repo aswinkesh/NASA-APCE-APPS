@@ -29,6 +29,18 @@ body {
   width: 100vw;
 }
 
+.watermark {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  color: white;
+  opacity: 0.5;
+  font-size: 14px;
+  z-index: 1000;
+  pointer-events: none;
+  font-weight: 500;
+}
+
 html, body, #root {
   height: 100%;
   width: 100%;

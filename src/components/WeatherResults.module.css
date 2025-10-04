@@ -270,6 +270,200 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
+.weatherAnimation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Sun animation for Very Hot */
+.sunAnimation {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 165, 0, 0.2), transparent 70%);
+  animation: pulse 2s infinite;
+}
+
+.sunAnimation::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 165, 0, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 60px #ffb700;
+  animation: glow 2s infinite;
+}
+
+/* Rain animation for Very Wet */
+.rainAnimation {
+  background: linear-gradient(to bottom, rgba(100, 100, 100, 0.2), transparent);
+}
+
+.rainDrop {
+  position: absolute;
+  width: 1.5px;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(154, 222, 255, 0.8), rgba(154, 222, 255, 0));
+  animation: rain 0.8s linear infinite;
+  transform: rotate(15deg);
+  box-shadow: 0 0 2px rgba(154, 222, 255, 0.5);
+}
+
+/* Snow animation for Very Snowy */
+.snowAnimation {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.snowflake {
+  position: absolute;
+  color: white;
+  opacity: 0.8;
+  animation: snowfall 3s linear infinite;
+}
+
+/* Wind animation for Very Windy */
+.windAnimation {
+  overflow: hidden;
+}
+
+.windLine {
+  position: absolute;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  animation: wind 2s linear infinite;
+}
+
+/* Frost animation for Very Cold */
+.frostAnimation {
+  background: radial-gradient(circle at 50% 50%, rgba(200, 230, 255, 0.1), transparent);
+}
+
+.frostCrystal {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(200, 230, 255, 0.5);
+  transform: rotate(45deg);
+  animation: frost 3s ease-in-out infinite;
+}
+
+/* Uncomfortable weather animation */
+.uncomfortableAnimation {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 50, 0, 0.2), transparent 70%);
+  animation: discomfortPulse 2s infinite;
+  overflow: hidden;
+}
+
+.uncomfortableSun {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 50, 0, 0.4);
+  border-radius: 50%;
+  box-shadow: 0 0 70px #ff5500;
+  animation: discomfortGlow 2s infinite;
+}
+
+.uncomfortableRing {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 180px;
+  height: 180px;
+  background: transparent;
+  border: 2px solid rgba(255, 50, 0, 0.3);
+  border-radius: 50%;
+  animation: discomfortRing 4s linear infinite;
+}
+
+.uncomfortableWind {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.windStreak {
+  position: absolute;
+  height: 3px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+  animation: discomfortWind 2s linear infinite;
+  transform-origin: left center;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes glow {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+@keyframes rain {
+  0% { height: 15px; transform: translateY(-100%); }
+  100% { height: 5px; transform: translateY(100vh); }
+}
+
+@keyframes snowfall {
+  0% { transform: translateY(-10px) rotate(0deg); }
+  100% { transform: translateY(100vh) rotate(360deg); }
+}
+
+@keyframes wind {
+  0% { transform: translateX(-100%) scaleY(1); }
+  100% { transform: translateX(100%) scaleY(0.5); }
+}
+
+@keyframes frost {
+  0%, 100% { opacity: 0; transform: rotate(45deg) scale(0.8); }
+  50% { opacity: 0.5; transform: rotate(45deg) scale(1); }
+}
+
+@keyframes discomfortPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+@keyframes discomfortGlow {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.6; }
+}
+
+@keyframes discomfortRing {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.8); }
+  100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.2); }
+}
+
+@keyframes discomfortWind {
+  0% {
+    transform: translateX(-100%) scaleY(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(200%) scaleY(0.5);
+    opacity: 0;
+  }
+}
+
 .graphLabel {
   font-size: 0.9rem;
   color: var(--text-secondary);

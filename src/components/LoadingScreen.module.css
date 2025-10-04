@@ -55,6 +55,15 @@
   justify-content: center;
 }
 
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  max-width: 600px;
+}
+
 .loadingText h2 {
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
@@ -66,6 +75,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.factsSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
 .loadingSteps p {
@@ -103,4 +120,52 @@
     transform: scale(0.8);
     opacity: 0.5;
   }
+}
+
+.weatherFact {
+  padding: 1.5rem;
+  background: rgba(33, 150, 243, 0.05);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: #666;
+  width: 90%;
+  text-align: center;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(33, 150, 243, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.weatherFact h3 {
+  color: #2196F3;
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+}
+
+.networkMessage {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.5rem 1rem;
+  background: rgba(33, 150, 243, 0.1);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #2196F3;
+  white-space: nowrap;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+  z-index: 1002;
+  width: fit-content;
+  margin-left: auto;
+}
+
+.networkMessage p {
+  margin: 0;
+  animation: blink 2s ease-in-out;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0; }
+  20%, 80% { opacity: 1; }
 }

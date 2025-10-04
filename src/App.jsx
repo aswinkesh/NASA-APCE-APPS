@@ -75,6 +75,7 @@ export default function App() {
 
   return (
     <div className="app-container">
+      <div className="watermark">WeatherDoc by NovaSpark</div>
       {/* Search and prediction controls */}
       <motion.div 
         className={`search-container top-right ${weatherData ? 'hidden' : ''}`}
@@ -231,7 +232,7 @@ export default function App() {
         <div className="dimension-toggle">
           <button 
             className={`toggle-btn ${showMap ? 'active' : ''}`}
-            disabled={isLoading}
+            disabled={isLoading || weatherData}
             onClick={async () => {
               if (isLoading) {
                 return;
@@ -291,8 +292,8 @@ export default function App() {
           >
             {showMap ? '3D' : '2D'}
           </button>
-          {/* Show tooltip when loading */}
-          {isLoading && (
+          {/* Show tooltip when loading or weather results are shown */}
+          {(isLoading || weatherData) && (
             <div 
               style={{
                 position: 'absolute',
