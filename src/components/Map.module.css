@@ -1,0 +1,50 @@
+.customMapControls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  top: 41em;
+  right: 0.5em;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 5px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.controlButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.controlButton:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+.controlButton:active {
+  transform: translateY(0);
+}
+
+/* Override OpenLayers default controls */
+:global(.ol-zoom) {
+  display: none !important;
+}
+
+:global(.ol-full-screen) {
+  display: none !important;
+}
+
+/* Hide attribution control (i icon and OpenStreetMap text) */
+:global(.ol-attribution) {
+  display: none !important;
+}

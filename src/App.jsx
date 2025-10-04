@@ -8,7 +8,8 @@ import SearchBar from './components/SearchBar'
 import PredictionControls from './components/PredictionControls'
 import Globe from './components/Globe'
 import Map from './components/Map'
-import WeatherCard from './components/WeatherCard'
+import WeatherResults from './components/WeatherResults'
+import LoadingScreen from './components/LoadingScreen'
 
 export default function App() {
   // State management
@@ -97,7 +98,7 @@ export default function App() {
     <div className="app-container">
       {/* Search and prediction controls */}
       <motion.div 
-        className="search-container top-right"
+        className={`search-container top-right ${weatherData ? 'hidden' : ''}`}
         initial={{ x: 100 }}
         animate={{ x: 0 }}
         transition={{ type: "spring", stiffness: 100 }}
@@ -196,7 +197,7 @@ export default function App() {
         </button>
       </div>
 
-      <div className="visualization-container">
+      <div className={`visualization-container ${isLoading || weatherData ? 'split' : ''}`}>
         <motion.div 
           ref={globeContainer} 
           className="globe-container"
@@ -209,7 +210,6 @@ export default function App() {
           style={{ width: '100%', height: '100%' }}
         >
           <Globe
-            key={activeView}
             coordinates={coordinates}
             activeView={activeView}
             onGlobeReady={() => console.log('Globe ready')}
@@ -258,14 +258,14 @@ export default function App() {
       </div>
 
       <AnimatePresence>
-        {weatherData && (
-          <WeatherCard
+        {isLoading ? (
+          <LoadingScreen />
+        ) : weatherData ? (
+          <WeatherResults
             weatherData={weatherData}
-            coordinates={coordinates}
-            weatherCardSpring={weatherCardSpring}
             onClose={() => setWeatherData(null)}
           />
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   )

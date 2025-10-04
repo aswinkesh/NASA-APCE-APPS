@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { Map as OLMap, View } from 'ol'
 import TileLayer from 'ol/layer/Tile'
-import styles from './Map.module.css'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import XYZ from 'ol/source/XYZ'
@@ -23,42 +22,6 @@ export default function Map({
   setShowPredictionControls,
   setIsFullScreen
 }) {
-  // Configure tile layers for different views
-  const getTileLayer = () => {
-    const configs = {
-      standard: {
-        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-      },
-      satellite: {
-        url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
-        maxZoom: 19,
-        attribution: '© Google Maps'
-      },
-      night: {
-        url: 'https://cartodb-basemaps-{a-d}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
-        maxZoom: 19,
-        attribution: '© CARTO'
-      },
-      topology: {
-        url: 'https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png',
-        maxZoom: 17,
-        attribution: '© OpenTopoMap (CC-BY-SA)'
-      }
-    }
-
-    const config = configs[activeView] || configs.standard
-    return new TileLayer({
-      source: new XYZ({
-        url: config.url,
-        maxZoom: config.maxZoom,
-        crossOrigin: 'anonymous',
-        attributions: config.attribution
-      })
-    })
-  }
-
   useEffect(() => {
     if (!mapRef.current || !coordinates) return
 
@@ -80,55 +43,11 @@ export default function Map({
 
     // Create custom controls
     const customControls = document.createElement('div')
-    customControls.className = `ol-control ${styles.customMapControls}`
+    customControls.className = 'ol-control custom-map-controls'
     
-    // Zoom in button
-    const zoomInButton = document.createElement('button')
-    zoomInButton.className = styles.controlButton
-    zoomInButton.innerHTML = '+'
-    zoomInButton.title = 'Zoom in'
-    zoomInButton.onclick = () => {
-      const view = map.current.getView()
-      view.animate({
-        zoom: view.getZoom() + 1,
-        duration: 250
-      })
-    }
-    customControls.appendChild(zoomInButton)
-
-    // Zoom out button
-    const zoomOutButton = document.createElement('button')
-    zoomOutButton.className = styles.controlButton
-    zoomOutButton.innerHTML = '−'
-    zoomOutButton.title = 'Zoom out'
-    zoomOutButton.onclick = () => {
-      const view = map.current.getView()
-      view.animate({
-        zoom: view.getZoom() - 1,
-        duration: 250
-      })
-    }
-    customControls.appendChild(zoomOutButton)
-
-    // Full screen button
-    const fullScreenButton = document.createElement('button')
-    fullScreenButton.className = styles.controlButton
-    fullScreenButton.innerHTML = '⛶'
-    fullScreenButton.title = 'Toggle full screen'
-    fullScreenButton.onclick = () => {
-      const element = document.querySelector('.visualization-container')
-      if (!document.fullscreenElement) {
-        element.requestFullscreen()
-      } else {
-        document.exitFullscreen()
-      }
-    }
-    customControls.appendChild(fullScreenButton)
-
     // GPS location button
     const gpsButton = document.createElement('button')
-    gpsButton.className = styles.controlButton
-    gpsButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>'
+    gpsButton.innerHTML = '📍'
     gpsButton.title = 'Find my location'
     gpsButton.onclick = () => {
       if (navigator.geolocation) {
@@ -149,36 +68,67 @@ export default function Map({
     }
     customControls.appendChild(gpsButton)
 
-    // Add click handler to map
-    map.current?.on('click', (event) => {
-      const coords = map.current.getCoordinates(event.pixel)
-      const lonLat = toLonLat(coords)
-      setCoordinates({
-        lat: lonLat[1],
-        lng: lonLat[0]
-      })
-      updateMarker({
-        lat: lonLat[1],
-        lng: lonLat[0]
-      })
-      setShowPredictionControls(true)
-    })
+    // Get tile layer configuration based on active view
+    const getTileLayer = () => {
+      const configs = {
+        standard: {
+          url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          maxZoom: 19,
+          attribution: '© OpenStreetMap contributors'
+        },
+        satellite: {
+          url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+          maxZoom: 19,
+          attribution: '© Google Maps'
+        },
+        night: {
+          url: 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/VIIRS_DNB_MONTHLY/default/2023-08-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png',
+          maxZoom: 8,
+          attribution: '© NASA Earth Observatory'
+        },
+        topology: {
+          url: 'https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png',
+          maxZoom: 18,
+          attribution: '© Wikimedia Labs | Map data © OpenStreetMap contributors'
+        }
+      }
 
-    // Initialize map
+      const config = configs[activeView] || configs.standard
+
+      return new TileLayer({
+        source: new XYZ({
+          url: config.url,
+          maxZoom: config.maxZoom,
+          crossOrigin: 'anonymous',
+          attributions: config.attribution
+        })
+      })
+    }
+
+    // Initialize map with proper configuration for each view
     map.current = new OLMap({
       target: mapRef.current,
       loadTilesWhileAnimating: true,
       loadTilesWhileInteracting: true,
       layers: [
         getTileLayer(),
-        // Vector layer for markers
+        // Add overlay layer for topology view
+        ...(activeView === 'topology' ? [
+          new TileLayer({
+            source: new XYZ({
+              url: 'https://tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png',
+              maxZoom: 18,
+              opacity: 0.3
+            })
+          })
+        ] : []),
         vectorLayer.current
       ],
       view: new View({
         center: fromLonLat([coordinates.lng, coordinates.lat]),
         zoom: activeView === 'night' ? 4 : 12,
         minZoom: activeView === 'night' ? 2 : 3,
-        maxZoom: activeView === 'night' ? 8 : 19,
+        maxZoom: activeView === 'night' ? 8 : (activeView === 'topology' ? 18 : 19),
         constrainResolution: true
       }),
       controls: defaultControls().extend([
@@ -209,12 +159,10 @@ export default function Map({
         lat: lonLat[1],
         lng: lonLat[0]
       })
-      setShowPredictionControls(true)
     })
 
-    // Update marker position and show prediction controls
+    // Update marker position
     updateMarker(coordinates)
-    setShowPredictionControls(true)
 
     return () => {
       if (map.current) {

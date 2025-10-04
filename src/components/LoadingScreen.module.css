@@ -1,0 +1,77 @@
+.loadingContainer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.content {
+  text-align: center;
+  padding: 2rem;
+  color: #2196F3;
+}
+
+.weatherIcon {
+  margin-bottom: 2rem;
+  color: #2196F3;
+  display: flex;
+  justify-content: center;
+}
+
+.loadingText h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.loadingSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.loadingSteps p {
+  color: #666;
+  font-size: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Glowing effect */
+.weatherIcon::after {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.2) 0%, rgba(33, 150, 243, 0) 70%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+}
