@@ -1,0 +1,221 @@
+import { useEffect, useRef, useState } from 'react'
+import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+
+export default function Globe({ 
+  coordinates, 
+  activeView, 
+  onGlobeReady,
+  globeRef
+}) {
+  const scene = useRef(null)
+  const camera = useRef(null)
+  const renderer = useRef(null)
+  const earth = useRef(null)
+  const stars = useRef([])
+  const marker = useRef(null)
+  const animationFrameId = useRef(null)
+  const controls = useRef(null)
+
+  useEffect(() => {
+    if (!globeRef.current) return
+
+    // Initialize Three.js scene
+    scene.current = new THREE.Scene()
+    camera.current = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000)
+    renderer.current = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+
+    // Setup renderer
+    renderer.current.setSize(window.innerWidth, window.innerHeight)
+    renderer.current.setPixelRatio(window.devicePixelRatio)
+    renderer.current.setClearColor(0x000000, 1)
+    globeRef.current.innerHTML = ''
+    globeRef.current.appendChild(renderer.current.domElement)
+    
+    // Set scene background
+    scene.current.background = new THREE.Color(0x000000)
+
+    // Create stars
+    createStars()
+
+    // Create Earth
+    createEarth()
+
+    // Add lights
+    addLights()
+
+    // Position camera
+    camera.current.position.z = 15
+
+    // Add OrbitControls
+    controls.current = new OrbitControls(camera.current, renderer.current.domElement)
+    controls.current.enableDamping = true
+    controls.current.dampingFactor = 0.05
+    controls.current.rotateSpeed = 0.5
+    controls.current.minDistance = 8
+    controls.current.maxDistance = 30
+
+    // Add marker
+    createMarker()
+
+    // Animation loop
+    const animate = () => {
+      if (controls.current) {
+        controls.current.update()
+      }
+      if (earth.current && !controls.current.enabled) {
+        earth.current.rotation.y += 0.001
+      }
+
+      // Animate stars
+      stars.current.forEach(star => {
+        star.mesh.material.opacity = 0.3 + Math.sin(Date.now() * star.twinkle) * 0.1
+      })
+
+      renderer.current.render(scene.current, camera.current)
+      animationFrameId.current = requestAnimationFrame(animate)
+    }
+    animate()
+
+    // Handle window resize
+    const handleResize = () => {
+      if (camera.current && renderer.current) {
+        camera.current.aspect = window.innerWidth / window.innerHeight
+        camera.current.updateProjectionMatrix()
+        renderer.current.setSize(window.innerWidth, window.innerHeight)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current)
+      }
+      cleanup()
+    }
+  }, [activeView])
+
+  // Update marker position when coordinates change
+  useEffect(() => {
+    updateMarkerPosition()
+  }, [coordinates])
+
+  // Update globe texture when view changes
+  useEffect(() => {
+    if (earth.current && scene.current) {
+      createEarth()
+    }
+  }, [activeView])
+
+  const createStars = () => {
+    const starGeometry = new THREE.SphereGeometry(0.15, 8, 8)
+    const starMaterial = new THREE.MeshBasicMaterial({ 
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.9
+    })
+
+    for (let i = 0; i < 1500; i++) {
+      const star = new THREE.Mesh(starGeometry, starMaterial.clone())
+      
+      const radius = 50 + Math.random() * 50
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos((Math.random() * 2) - 1)
+      
+      star.position.x = radius * Math.sin(phi) * Math.cos(theta)
+      star.position.y = radius * Math.sin(phi) * Math.sin(theta)
+      star.position.z = radius * Math.cos(phi)
+      
+      const scale = 0.8 + Math.random() * 1.2
+      star.scale.set(scale, scale, scale)
+      
+      scene.current.add(star)
+      stars.current.push({
+        mesh: star,
+        twinkle: Math.random() * 0.5
+      })
+    }
+  }
+
+  const createEarth = () => {
+    const geometry = new THREE.SphereGeometry(5, 64, 64)
+    const loader = new THREE.TextureLoader()
+
+
+    loader.load('https://unpkg.com/three-globe/example/img/earth-day.jpg', (texture) => {
+      texture.anisotropy = 16
+      const material = new THREE.MeshPhongMaterial({
+        map: texture,
+        bumpMap: texture,
+        bumpScale: 0.05,
+      })
+
+      if (earth.current) {
+        // Update existing earth mesh with new texture
+        earth.current.material.dispose()
+        earth.current.material = material
+      } else {
+        // Create new earth mesh
+        earth.current = new THREE.Mesh(geometry, material)
+        scene.current.add(earth.current)
+      }
+      
+      onGlobeReady()
+    })
+  }
+
+  const addLights = () => {
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+    scene.current.add(ambientLight)
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1)
+    directionalLight.position.set(5, 3, 5)
+    scene.current.add(directionalLight)
+  }
+
+  const createMarker = () => {
+    const markerGeometry = new THREE.SphereGeometry(0.1, 16, 16)
+    const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    marker.current = new THREE.Mesh(markerGeometry, markerMaterial)
+    marker.current.visible = false
+    scene.current.add(marker.current)
+  }
+
+  const updateMarkerPosition = () => {
+    if (!earth.current || !marker.current) return
+
+    const phi = (90 - coordinates.lat) * (Math.PI / 180)
+    const theta = (coordinates.lng + 180) * (Math.PI / 180)
+    const radius = 5
+
+    const position = new THREE.Vector3(
+      -radius * Math.sin(phi) * Math.cos(theta),
+      radius * Math.cos(phi),
+      radius * Math.sin(phi) * Math.sin(theta)
+    )
+
+    marker.current.position.copy(position)
+    marker.current.visible = true
+  }
+
+  const cleanup = () => {
+    if (globeRef.current) {
+      globeRef.current.innerHTML = ''
+    }
+    if (earth.current) {
+      earth.current.geometry.dispose()
+      earth.current.material.dispose()
+    }
+    if (controls.current) {
+      controls.current.dispose()
+    }
+    scene.current = null
+    camera.current = null
+    renderer.current = null
+    earth.current = null
+    controls.current = null
+  }
+
+  return null
+}
