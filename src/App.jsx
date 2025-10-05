@@ -106,6 +106,13 @@ export default function App() {
                   alert('Please select a location first');
                   return;
                 }
+
+                // Ensure we're in 2D view before proceeding
+                if (!showMap) {
+                  setShowMap(true);
+                  // Give the map a moment to load
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                }
                 
                 setIsLoading(true);
                 try {

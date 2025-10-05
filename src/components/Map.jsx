@@ -40,26 +40,30 @@ export default function Map({
         attribution: '© Google Maps'
       },
       night: {
-        url: 'https://cartodb-basemaps-{a-d}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
+        url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
         maxZoom: 19,
-        attribution: '© CARTO'
+        attribution: '© CARTO & OpenStreetMap contributors'
       },
       topology: {
         url: 'https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png',
         maxZoom: 17,
         attribution: '© OpenTopoMap (CC-BY-SA)'
       }
-    }
+    };
 
-    const config = configs[activeView] || configs.standard
+    const config = configs[activeView] || configs.standard;
+
     return new TileLayer({
       source: new XYZ({
         url: config.url,
         maxZoom: config.maxZoom,
         crossOrigin: 'anonymous',
-        attributions: config.attribution
-      })
-    })
+        attributions: config.attribution,
+        tilePixelRatio: activeView === 'night' ? 2 : 1,
+        wrapX: true
+      }),
+      opacity: 1
+    });
   }
 
   useEffect(() => {
@@ -70,14 +74,30 @@ export default function Map({
       vectorSource.current = new VectorSource()
       vectorLayer.current = new VectorLayer({
         source: vectorSource.current,
-        style: new Style({
-          image: new Icon({
-            anchor: [0.5, 1],
-            src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="%23FF0000" d="M12 0C7.6 0 4 3.6 4 8c0 7 8 16 8 16s8-9 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>',
-            scale: 1.2,
-            cursor: 'move'
-          })
-        })
+        style: (feature) => {
+          const isNightMode = activeView === 'night';
+          return new Style({
+            image: new Icon({
+              anchor: [0.5, 1],
+              src: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+                <defs>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path fill="${isNightMode ? '%23FFD700' : '%23FF0000'}" 
+                      filter="url(%23glow)"
+                      d="M12 0C7.6 0 4 3.6 4 8c0 7 8 16 8 16s8-9 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/>
+              </svg>`,
+              scale: isNightMode ? 1.4 : 1.2,
+              cursor: 'move'
+            })
+          });
+        }
       })
     }
 
@@ -154,7 +174,7 @@ export default function Map({
 
     // Add click handler to map
     map.current?.on('click', async (event) => {
-      const coords = map.current.getCoordinates(event.pixel)
+      const coords = map.current.getCoordinateFromPixel(event.pixel)
       const lonLat = toLonLat(coords)
       const newCoords = {
         lat: lonLat[1],
@@ -172,15 +192,15 @@ export default function Map({
       loadTilesWhileAnimating: true,
       loadTilesWhileInteracting: true,
       layers: [
-        getTileLayer(),
+        ...(Array.isArray(getTileLayer()) ? getTileLayer() : [getTileLayer()]),
         // Vector layer for markers
         vectorLayer.current
       ],
       view: new View({
         center: fromLonLat([coordinates.lng, coordinates.lat]),
-        zoom: activeView === 'night' ? 4 : 12,
-        minZoom: activeView === 'night' ? 2 : 3,
-        maxZoom: activeView === 'night' ? 8 : 19,
+        zoom: 12,
+        minZoom: 3,
+        maxZoom: 19,
         constrainResolution: true
       }),
       controls: defaultControls().extend([

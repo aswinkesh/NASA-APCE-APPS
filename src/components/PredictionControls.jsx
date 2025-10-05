@@ -19,6 +19,13 @@ export default function PredictionControls({
         value={predictionDate}
         onChange={(e) => setPredictionDate(e.target.value)}
         className="date-input"
+        min={new Date().toISOString().split('T')[0]}
+        max="2030-12-31"
+        style={{
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          fontSize: '14px',
+        }}
       />
       <motion.button
         className="predict-button"

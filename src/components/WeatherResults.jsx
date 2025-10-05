@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import styles from './WeatherResults.module.css';
 
-const ANIMATION_DURATION = 15000; // 5 seconds
+const ANIMATION_DURATION = 20000; // 5 seconds
 
 export default function WeatherResults({ weatherData, onClose }) {
   const locationName = weatherData.locationName;

@@ -4,13 +4,14 @@
   right: 0;
   width: 50%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(220, 250, 250, 0.95);
   backdrop-filter: blur(10px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
 }
 
 .closeButton {
@@ -20,8 +21,8 @@
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: transparent;
-  border: none;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   color: #666;
   font-size: 1.5rem;
   display: flex;
@@ -29,7 +30,9 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  z-index: 1001;
+  z-index: 1005;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  pointer-events: all;
 }
 
 .closeButton:hover {
@@ -48,11 +51,63 @@
   color: #2196F3;
 }
 
-.weatherIcon {
+.weatherIconsContainer {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
   margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.weatherIcon {
   color: #2196F3;
   display: flex;
   justify-content: center;
+  position: relative;
+}
+
+.sunIcon {
+  color: #ffd700;
+}
+
+.rainIcon {
+  color: #87ceeb;
+}
+
+.snowIcon {
+  color: #f0f8ff;
+}
+
+.windIcon {
+  color: #dcdcdc;
+}
+
+.weatherIcon::after {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.2) 0%, rgba(33, 150, 243, 0) 70%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: pulse 2s infinite;
+}
+
+.sunIcon::after {
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0) 70%);
+}
+
+.rainIcon::after {
+  background: radial-gradient(circle, rgba(135, 206, 235, 0.2) 0%, rgba(135, 206, 235, 0) 70%);
+}
+
+.snowIcon::after {
+  background: radial-gradient(circle, rgba(240, 248, 255, 0.2) 0%, rgba(240, 248, 255, 0) 70%);
+}
+
+.windIcon::after {
+  background: radial-gradient(circle, rgba(220, 220, 220, 0.2) 0%, rgba(220, 220, 220, 0) 70%);
 }
 
 .mainContent {
